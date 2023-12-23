@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="gta_games">
+        <item>GTA 3</item>
+        <item>GTA Vice City</item>
+        <item>GTA San Andreas</item>
+        <item>GTA 4</item>
+        <item>GTA 5</item>
+    </string-array>
+</resources>
