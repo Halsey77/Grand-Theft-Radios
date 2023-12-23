@@ -30,10 +30,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initialize() {
-        setGameSpinner()
+        initGameSpinner()
+        initStationSpinner()
     }
 
-    private fun setGameSpinner() {
+    private fun initStationSpinner() {
+        stationSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                val stationName = stationSpinner.selectedItem.toString()
+                stationText.text = stationName
+            }
+
+            override fun onNothingSelected(p0: AdapterView<*>?) {
+                TODO("Not yet implemented")
+            }
+
+        }
+    }
+
+    private fun initGameSpinner() {
         ArrayAdapter.createFromResource(
             this,
             R.array.gta_games,
@@ -45,14 +60,14 @@ class MainActivity : AppCompatActivity() {
 
         gameSpinner.setSelection(0)
 
-        //make station spinner change when game spinner changes
+        //make station spinner and gameText change when game spinner changes
         gameSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>,
                 view: View, position: Int, id: Long
             ) {
-                //set station spinner to the correct stations
-                setStationSpinner(position);
+                setStationValues(position)
+                gameText.text = resources.getStringArray(R.array.gta_games)[position]
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {
@@ -61,8 +76,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setStationSpinner(position: Int) {
-        val stations = resources.getStringArray(R.array.gta_stations)[position].split(';').toTypedArray();
+    private fun setStationValues(position: Int) {
+        val stations = resources.getStringArray(R.array.gta_stations)[position].split(';').toTypedArray()
 
         ArrayAdapter(
             this,
@@ -72,5 +87,7 @@ class MainActivity : AppCompatActivity() {
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             stationSpinner.adapter = adapter
         }
+
+        stationSpinner.setSelection(0)
     }
 }
