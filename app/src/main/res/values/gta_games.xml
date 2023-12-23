@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="gta_games">
+        <item>GTA 3</item>
+        <item>GTA Vice City</item>
+        <item>GTA San Andreas</item>
+        <item>GTA 4</item>
+        <item>GTA 5</item>
+    </string-array>
+
+    <string-array name="gta_stations">
+        <item>Head Radio;Double Clef FM;K-JAH;Rise FM;Lips 106;Game Radio;MSX FM;Flashback 95.6;Chatterbox FM</item>
+        <item>Wildstyle;Flash FM;K-Chat;Fever 105;V-Rock;VCPR;Espantoso;Emotion 98.3;Wave 103</item>
+        <item>K-JAH West;CSR 103.9;Radio X;Master Sounds 98.3;Playback FM;Bounce FM;SF-UR;Radio Los Santos;Radio Los Santos</item>
+        <item>Vladivostok FM;Liberty Rock Radio;Liberty City Hardcore;The Journey;The Vibe 98.8;San Juan Sounds;The Beat 102.7;Electro-Choc;Fusion FM</item>
+        <item>Los Santos Rock Radio;Non-Stop Pop FM;Radio Los Santos;Channel X;West Coast Classics;Rebel Radio;Soulwax FM;East Los FM;West Coast Talk Radio</item>
+    </string-array>
+</resources>
