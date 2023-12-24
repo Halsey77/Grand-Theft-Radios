@@ -30,6 +30,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initialize() {
+        RadiosMap.getInstance(); //initialize the maps
+
         initGameSpinner()
         initStationSpinner()
     }
@@ -49,10 +51,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initGameSpinner() {
-        ArrayAdapter.createFromResource(
+        ArrayAdapter(
             this,
-            R.array.gta_games,
-            android.R.layout.simple_spinner_item
+            android.R.layout.simple_spinner_item,
+            RadiosMap.GTA_GAMES,
         ).also { adapter ->
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             gameSpinner.adapter = adapter
@@ -66,7 +68,9 @@ class MainActivity : AppCompatActivity() {
                 parent: AdapterView<*>,
                 view: View, position: Int, id: Long
             ) {
-                setStationValues(position)
+
+                val gameName = gameSpinner.selectedItem.toString()
+                setStationValues(gameName);
                 gameText.text = resources.getStringArray(R.array.gta_games)[position]
             }
 
@@ -76,8 +80,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setStationValues(position: Int) {
-        val stations = resources.getStringArray(R.array.gta_stations)[position].split(';').toTypedArray()
+    private fun setStationValues(gameName: String) {
+        val stations = RadiosMap.getInstance().getRadiosOfGame(gameName);
 
         ArrayAdapter(
             this,

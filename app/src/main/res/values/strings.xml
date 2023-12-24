@@ -2,4 +2,6 @@
     <string name="app_name">Grand Theft Radios</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="label_game_spinner">choose games from spinner</string>
+    <string name="label_station_spinner">Choose station to play from spinner</string>
 </resources>
