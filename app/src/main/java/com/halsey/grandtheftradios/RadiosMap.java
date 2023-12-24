@@ -8,8 +8,8 @@ public class RadiosMap {
     public final static String[] GTA_GAMES = {"GTA 3", "GTA Vice City", "GTA San Andreas", "GTA 4", "GTA 5"};
 
     private static RadiosMap instance = null;
-    private static Map<String, Radio> radiosMap = new HashMap<>();
-    private static Map<String, String[]> radioNamesMap = new HashMap<>();
+    private static final Map<String, Radio> radiosMap = new HashMap<>();
+    private static final Map<String, String[]> radioNamesMap = new HashMap<>();
 
     private RadiosMap() {
         addGTA3Radios();

@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initialize() {
-        RadiosMap.getInstance(); //initialize the maps
+        RadiosMap.getInstance() //initialize the maps
 
         initGameSpinner()
         initStationSpinner()
@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
             ) {
 
                 val gameName = gameSpinner.selectedItem.toString()
-                setStationValues(gameName);
+                setStationValues(gameName)
                 gameText.text = resources.getStringArray(R.array.gta_games)[position]
             }
 
@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setStationValues(gameName: String) {
-        val stations = RadiosMap.getInstance().getRadiosOfGame(gameName);
+        val stations = RadiosMap.getInstance().getRadiosOfGame(gameName)
 
         ArrayAdapter(
             this,
