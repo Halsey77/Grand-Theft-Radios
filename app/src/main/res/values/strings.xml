@@ -5,4 +5,6 @@
     <string name="label_game_spinner">choose games from spinner</string>
     <string name="label_station_spinner">Choose station to play from spinner</string>
     <string name="button_download">Download radio station</string>
+    <string name="button_downloaded">Downloaded</string>
+    <string name="button_is_downloading">Downloading…</string>
 </resources>
