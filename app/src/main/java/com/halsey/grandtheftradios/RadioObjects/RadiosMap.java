@@ -1,7 +1,5 @@
 package com.halsey.grandtheftradios.RadioObjects;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,7 +9,8 @@ public class RadiosMap {
 
     private static RadiosMap instance = null;
     private static final Map<String, Radio> radiosMap = new HashMap<>();
-    private static final Map<String, String[]> radioNamesMap = new HashMap<>();
+    private static final Map<String, String[]> gameToStationNamesMap = new HashMap<>();
+    private static final Map<String, String> urlToStationNameMap = new HashMap<>();
 
     private RadiosMap() {
         addGTA3Radios();
@@ -131,8 +130,9 @@ public class RadiosMap {
         for (int i = 0; i < radios.length; i++) {
             radiosMap.put(game + "-" + radios[i].getName(), radios[i]);
             names[i] = radios[i].getName();
+            urlToStationNameMap.put(radios[i].getUrl(), radios[i].getName());
         }
-        radioNamesMap.put(game, names);
+        gameToStationNamesMap.put(game, names);
     }
 
     public static RadiosMap getInstance() {
@@ -144,7 +144,7 @@ public class RadiosMap {
     }
 
     public String[] getRadiosOfGame(String game) {
-        return radioNamesMap.get(game);
+        return gameToStationNamesMap.get(game);
     }
 
     public Radio getRadio(String game, String radioName) {
@@ -152,6 +152,9 @@ public class RadiosMap {
     }
 
     public String getStationNameFromUrl(String url) {
+        if(urlToStationNameMap.containsValue(url)) {
+            return urlToStationNameMap.get(url);
+        }
         return null;
     }
 }

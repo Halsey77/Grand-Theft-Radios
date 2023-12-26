@@ -13,13 +13,13 @@ import android.widget.Toast
 class RadioDownloadManager(private val context: Context) {
     private var downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     private var downloadCompleteReceiver: BroadcastReceiver? = null
-    private val onDownloadCompleteCallbacks: MutableList<(String) -> Unit> = mutableListOf()
+    private val onDownloadCompleteCallbacks: MutableList<(Int, String?) -> Unit> = mutableListOf()
 
     init {
         registerDownloadCompleteReceiver()
     }
 
-    public fun addOnDownloadCompleteCallback(callback: (String) -> Unit) {
+    fun addOnDownloadCompleteCallback(callback: (Int, String?) -> Unit) {
         onDownloadCompleteCallbacks.add(callback)
     }
 
@@ -29,8 +29,12 @@ class RadioDownloadManager(private val context: Context) {
                 val downloadId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
 
                 if (downloadId != null && downloadId != -1L) {
-                    val url = getDownloadedUrl(downloadId)
-                    onDownloadCompleteCallbacks.forEach { it(url) }
+                    var url = getDownloadUrl(downloadId)
+                    var status = 0
+
+                    status = if(isDownloadCancelled(downloadId)) DownloadManager.STATUS_FAILED else DownloadManager.STATUS_SUCCESSFUL
+
+                    onDownloadCompleteCallbacks.forEach { it(status, url) }
                 }
             }
         }
@@ -38,30 +42,34 @@ class RadioDownloadManager(private val context: Context) {
         context.registerReceiver(downloadCompleteReceiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
     }
 
-    private fun getDownloadedUrl(downloadId: Long): String {
+    private fun isDownloadCancelled(downloadId: Long): Boolean {
         val query = DownloadManager.Query()
         query.setFilterById(downloadId)
 
         val cursor = downloadManager.query(query)
-        cursor.moveToFirst()
+        var status = 0
+        if(cursor != null && cursor.moveToFirst()) {
+            val colIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+            status = cursor.getInt(colIndex)
+            cursor.close()
+        }
 
-        val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
-        val uri = cursor.getString(columnIndex)
+        return status == DownloadManager.STATUS_FAILED
+    }
 
-        cursor.close()
+    private fun getDownloadUrl(downloadId: Long): String? {
+        val query = DownloadManager.Query()
+        query.setFilterById(downloadId)
+
+        val cursor = downloadManager.query(query)
+        var uri: String? = null
+        if(cursor !== null && cursor.moveToFirst()) {
+            val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_URI)
+            uri = cursor.getString(columnIndex)
+            cursor.close()
+        }
 
         return uri
-    }
-
-    private fun unregisterDownloadCompleteReceiver() {
-        if (downloadCompleteReceiver != null) {
-            context.unregisterReceiver(downloadCompleteReceiver)
-            downloadCompleteReceiver = null
-        }
-    }
-
-    private fun onDownloadComplete() {
-        Toast.makeText(context, "Download finished", Toast.LENGTH_LONG).show()
     }
 
     fun startDownload(radio: Radio) {
@@ -73,10 +81,6 @@ class RadioDownloadManager(private val context: Context) {
         request.setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, radio.fileName)
 
         downloadManager.enqueue(request)
-    }
-
-    fun onDestroy() {
-        unregisterDownloadCompleteReceiver()
     }
 
     public fun isStationBeingDownloaded(stationUrl: String): Boolean {
@@ -109,5 +113,16 @@ class RadioDownloadManager(private val context: Context) {
 
         cursor.close()
         return false
+    }
+
+    fun onDestroy() {
+        unregisterDownloadCompleteReceiver()
+    }
+
+    private fun unregisterDownloadCompleteReceiver() {
+        if (downloadCompleteReceiver != null) {
+            context.unregisterReceiver(downloadCompleteReceiver)
+            downloadCompleteReceiver = null
+        }
     }
 }

@@ -31,10 +31,21 @@
             app:layout_constraintTop_toBottomOf="@+id/stationText"
             app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.502" android:minHeight="48dp" android:layout_marginTop="32dp"/>
+    <ProgressBar
+            style="?android:attr/progressBarStyle"
+            android:layout_width="20dp"
+            android:layout_height="21dp"
+            android:id="@+id/progressBar"
+            app:layout_constraintBottom_toBottomOf="@+id/downloadButton"
+            app:layout_constraintTop_toTopOf="@+id/downloadButton" android:visibility="invisible"
+            android:elevation="9dp" app:layout_constraintStart_toStartOf="@+id/downloadButton"
+            android:layout_marginStart="16dp"/>
     <Button
             android:text="@string/button_download"
-            android:layout_width="wrap_content"
+            android:layout_width="260dp"
             android:layout_height="wrap_content" android:id="@+id/downloadButton"
             app:layout_constraintTop_toBottomOf="@+id/stationSpinner" app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginTop="24dp"/>
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginTop="24dp">
+    </Button>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

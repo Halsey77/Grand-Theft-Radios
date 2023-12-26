@@ -1,5 +1,6 @@
 package com.halsey.grandtheftradios
 
+import android.app.DownloadManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -15,6 +16,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var gameText: TextView
     private lateinit var stationText: TextView
     private lateinit var downloadButton: Button
+    private lateinit var progressBar: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,19 +28,22 @@ class MainActivity : AppCompatActivity() {
         gameText = findViewById(R.id.gameText)
         stationText = findViewById(R.id.stationText)
         downloadButton = findViewById(R.id.downloadButton)
+        progressBar = findViewById(R.id.progressBar)
 
         radioDownloadManager = RadioDownloadManager(this)
-        radioDownloadManager.addOnDownloadCompleteCallback { url ->
-            onDownloadComplete(url)
+        radioDownloadManager.addOnDownloadCompleteCallback { status, url ->
+            onDownloadComplete(status, url)
         }
 
         //initialize the activity
         initialize()
     }
 
-    private fun onDownloadComplete(url: String) {
+    private fun onDownloadComplete(status: Int, url: String?) {
         val stationName = RadiosMap.getInstance().getStationNameFromUrl(url)
-        Toast.makeText(this, "$stationName has been added", Toast.LENGTH_SHORT).show()
+        val text = if (stationName == null) "Failed to download radio station" else "$stationName has been added"
+
+        Toast.makeText(this, text, Toast.LENGTH_LONG).show()
         applyStateToDownloadButton()
     }
 
@@ -133,13 +138,24 @@ class MainActivity : AppCompatActivity() {
         if(isBeingDownload) {
             downloadButton.text = getString(R.string.button_is_downloading)
             downloadButton.isEnabled = false
+            showProgressBar()
         } else if(hasBeenDownloaded) {
             downloadButton.text = getString(R.string.button_downloaded)
             downloadButton.isEnabled = false
+            hideProgressBar()
         } else {
             downloadButton.text = getString(R.string.button_download)
             downloadButton.isEnabled = true
+            hideProgressBar()
         }
+    }
+
+    private fun showProgressBar() {
+        progressBar.visibility = View.VISIBLE
+    }
+
+    private fun hideProgressBar() {
+        progressBar.visibility = View.GONE
     }
 
     override fun onDestroy() {
