@@ -152,7 +152,7 @@ public class RadiosMap {
     }
 
     public String getStationNameFromUrl(String url) {
-        if(urlToStationNameMap.containsValue(url)) {
+        if(urlToStationNameMap.containsKey(url)) {
             return urlToStationNameMap.get(url);
         }
         return null;

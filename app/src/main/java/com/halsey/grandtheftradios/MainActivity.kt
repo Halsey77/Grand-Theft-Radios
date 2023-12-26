@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun onDownloadComplete(status: Int, url: String?) {
         val stationName = RadiosMap.getInstance().getStationNameFromUrl(url)
-        val text = if (stationName == null) "Failed to download radio station" else "$stationName has been added"
+        val text = if (status != DownloadManager.STATUS_SUCCESSFUL) "Failed to download radio station" else "$stationName has been added"
 
         Toast.makeText(this, text, Toast.LENGTH_LONG).show()
         applyStateToDownloadButton()

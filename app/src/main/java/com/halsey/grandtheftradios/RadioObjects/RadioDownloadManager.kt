@@ -8,7 +8,6 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
-import android.widget.Toast
 
 class RadioDownloadManager(private val context: Context) {
     private var downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
@@ -29,10 +28,8 @@ class RadioDownloadManager(private val context: Context) {
                 val downloadId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
 
                 if (downloadId != null && downloadId != -1L) {
-                    var url = getDownloadUrl(downloadId)
-                    var status = 0
-
-                    status = if(isDownloadCancelled(downloadId)) DownloadManager.STATUS_FAILED else DownloadManager.STATUS_SUCCESSFUL
+                    val url = getDownloadUrl(downloadId)
+                    val status = if(isDownloadFailed(downloadId)) DownloadManager.STATUS_FAILED else DownloadManager.STATUS_SUCCESSFUL
 
                     onDownloadCompleteCallbacks.forEach { it(status, url) }
                 }
@@ -42,12 +39,12 @@ class RadioDownloadManager(private val context: Context) {
         context.registerReceiver(downloadCompleteReceiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
     }
 
-    private fun isDownloadCancelled(downloadId: Long): Boolean {
+    private fun isDownloadFailed(downloadId: Long): Boolean {
         val query = DownloadManager.Query()
         query.setFilterById(downloadId)
 
         val cursor = downloadManager.query(query)
-        var status = 0
+        var status = DownloadManager.STATUS_FAILED
         if(cursor != null && cursor.moveToFirst()) {
             val colIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
             status = cursor.getInt(colIndex)
@@ -83,7 +80,7 @@ class RadioDownloadManager(private val context: Context) {
         downloadManager.enqueue(request)
     }
 
-    public fun isStationBeingDownloaded(stationUrl: String): Boolean {
+    fun isStationBeingDownloaded(stationUrl: String): Boolean {
         return isStationInStatus(stationUrl,
             DownloadManager.STATUS_RUNNING or
                 DownloadManager.STATUS_PAUSED or
@@ -91,7 +88,7 @@ class RadioDownloadManager(private val context: Context) {
         )
     }
 
-    public fun isStationDownloaded(stationUrl: String): Boolean {
+    fun isStationDownloaded(stationUrl: String): Boolean {
         return isStationInStatus(stationUrl, DownloadManager.STATUS_SUCCESSFUL)
     }
 
