@@ -7,4 +7,6 @@
     <string name="button_download">Download radio station</string>
     <string name="button_downloaded">Downloaded</string>
     <string name="button_is_downloading">Downloading…</string>
+    <string name="button_play">Play</string>
+    <string name="button_pause">Pause</string>
 </resources>

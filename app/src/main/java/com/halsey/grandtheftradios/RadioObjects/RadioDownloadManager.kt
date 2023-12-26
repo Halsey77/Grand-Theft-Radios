@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
+import java.io.File
 
 class RadioDownloadManager(private val context: Context) {
     private var downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
@@ -121,5 +122,10 @@ class RadioDownloadManager(private val context: Context) {
             context.unregisterReceiver(downloadCompleteReceiver)
             downloadCompleteReceiver = null
         }
+    }
+
+    fun getAbsoluteFilePath(radio: Radio): String {
+        val externalFilesDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+        return File(externalFilesDir, radio.fileName).absolutePath
     }
 }
