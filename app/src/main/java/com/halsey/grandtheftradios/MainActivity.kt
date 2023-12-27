@@ -1,19 +1,19 @@
 package com.halsey.grandtheftradios
 
 import android.app.DownloadManager
-import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.*
 import com.halsey.grandtheftradios.RadioObjects.RadioDownloadManager
+import com.halsey.grandtheftradios.RadioObjects.RadioPlayer
 import com.halsey.grandtheftradios.RadioObjects.RadiosMap
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
     private lateinit var radioDownloadManager: RadioDownloadManager
-    private var mediaPlayer: MediaPlayer? = null
-    private var isStationPlaying = false
-    private var isStationPrepared = false
+    private lateinit var radioPlayer: RadioPlayer
+    private var gameName = ""
+    private var stationName = ""
 
     private lateinit var gameSpinner: Spinner
     private lateinit var stationSpinner: Spinner
@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
         playButton = findViewById(R.id.playButton)
 
         radioDownloadManager = RadioDownloadManager(this)
+        radioPlayer = RadioPlayer(this)
 
         initialize()
     }
@@ -66,90 +67,45 @@ class MainActivity : AppCompatActivity() {
         }
 
         playButton.setOnClickListener {
-            if(isStationPlaying) {
-                pauseStation()
+            val radio = RadiosMap.getInstance().getRadio(gameName, stationName)
+
+            if(!radioDownloadManager.isStationDownloaded(radio.url)) {
+                Toast.makeText(this, "Please download the station first", Toast.LENGTH_LONG).show()
             }
             else {
-                playStation()
+                val mp3FilePath = radioDownloadManager.getAbsoluteFilePath(radio)
+                radioPlayer.insertStationToPlayer(mp3FilePath)
             }
         }
+
+        gameName = RadiosMap.GTA_GAMES[0]
+        stationName = RadiosMap.getInstance().getRadiosOfGame(gameName)[0]
     }
 
     private fun applyStateToPlayButton() {
-        val gameName = gameSpinner.selectedItem.toString()
-        val stationName = stationSpinner.selectedItem.toString()
         val radio = RadiosMap.getInstance().getRadio(gameName, stationName)
+        playButton.isEnabled = radioDownloadManager.isStationDownloaded(radio.url)
 
-        val hasBeenDownloaded = radioDownloadManager.isStationDownloaded(radio.url)
-        playButton.isEnabled = hasBeenDownloaded
-
-        playButton.text = if (isStationPlaying) getString(R.string.button_pause) else getString(R.string.button_play)
-    }
-
-    private fun pauseStation() {
-        mediaPlayer?.apply {
-            if (isPlaying) {
-                pause()
-                isStationPlaying = false
-                applyStateToPlayButton()
-            }
-        }
-    }
-
-    private fun playStation() {
-        val gameName = gameSpinner.selectedItem.toString()
-        val stationName = stationSpinner.selectedItem.toString()
-        val radio = RadiosMap.getInstance().getRadio(gameName, stationName)
-
-        if(mediaPlayer == null) {
-            mediaPlayer = MediaPlayer()
-        }
-
-        mediaPlayer?.apply {
-            if(isPlaying) {
-                return
-            }
-
-            if(isStationPrepared) { //if the station has already been prepared, just play it
-                start()
-                isStationPlaying = true
-                applyStateToPlayButton()
-            }
-            else {  //otherwise, prepare it and then play it
-                try {
-                    val mp3FilePath = radioDownloadManager.getAbsoluteFilePath(radio)
-                    setDataSource(mp3FilePath)
-                    prepareAsync()
-
-                    setOnPreparedListener {
-                        start()
-                        isStationPlaying = true
-                        isStationPrepared = true
-                        applyStateToPlayButton()
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(this@MainActivity, "Failed to play radio station", Toast.LENGTH_LONG).show()
-                    e.printStackTrace()
-                }
-            }
+        val mp3FilePath = radioDownloadManager.getAbsoluteFilePath(radio)
+        if(radioPlayer.isRadioStationPlaying(mp3FilePath)) {
+            playButton.text = getString(R.string.button_pause)
+        } else {
+            playButton.text = getString(R.string.button_play)
         }
     }
 
     private fun downloadStation() {
-        val gameName = gameSpinner.selectedItem.toString()
-        val stationName = stationSpinner.selectedItem.toString()
         val radio = RadiosMap.getInstance().getRadio(gameName, stationName)
-
         radioDownloadManager.startDownload(radio)
     }
 
     private fun initStationSpinner() {
         stationSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                val stationName = stationSpinner.selectedItem.toString()
-                stationText.text = stationName
+                val name = stationSpinner.selectedItem.toString()
+                stationText.text = name
+                stationName = name
                 applyStateToDownloadButton()
-                resetStationPlayerStates()
                 applyStateToPlayButton()
             }
 
@@ -157,17 +113,7 @@ class MainActivity : AppCompatActivity() {
                 //do nothing
             }
         }
-    }
-
-    private fun resetStationPlayerStates() {
-            mediaPlayer?.apply {
-                stop()
-                reset()
-                release()
-                mediaPlayer = null
-                isStationPlaying = false
-                isStationPrepared = false
-            }
+        stationSpinner.setSelection(0)
     }
 
     private fun initGameSpinner() {
@@ -180,8 +126,6 @@ class MainActivity : AppCompatActivity() {
             gameSpinner.adapter = adapter
         }
 
-        gameSpinner.setSelection(0)
-
         //make station spinner and gameText change when game spinner changes
         gameSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
@@ -189,11 +133,11 @@ class MainActivity : AppCompatActivity() {
                 view: View, position: Int, id: Long
             ) {
 
-                val gameName = gameSpinner.selectedItem.toString()
-                setStationsSpinnerValues(gameName)
-                gameText.text = gameName
+                val name = gameSpinner.selectedItem.toString()
+                setStationsSpinnerValues(name)
+                gameText.text = name
+                gameName = name
                 applyStateToDownloadButton()
-                resetStationPlayerStates()
                 applyStateToPlayButton()
             }
 
@@ -201,6 +145,7 @@ class MainActivity : AppCompatActivity() {
                 //nothing happens
             }
         }
+        gameSpinner.setSelection(0)
     }
 
     private fun setStationsSpinnerValues(gameName: String) {
@@ -219,10 +164,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyStateToDownloadButton() {
-        val gameName = gameSpinner.selectedItem.toString()
-        val stationName = stationSpinner.selectedItem.toString()
         val radio = RadiosMap.getInstance().getRadio(gameName, stationName)
-
         val isBeingDownload = radioDownloadManager.isStationBeingDownloaded(radio.url)
         val hasBeenDownloaded = radioDownloadManager.isStationDownloaded(radio.url)
 
@@ -252,6 +194,10 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         radioDownloadManager.onDestroy()
-        mediaPlayer?.release()
+        radioPlayer.onDestroy()
+    }
+
+    override fun onRadioPlayerStateChanged(radioPlayerState: RadioPlayer.RadioPlayerState) {
+        applyStateToPlayButton()
     }
 }
