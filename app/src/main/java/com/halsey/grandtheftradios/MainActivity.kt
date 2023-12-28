@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
         playButton = findViewById(R.id.playButton)
 
         radioDownloadManager = RadioDownloadManager(this)
-        radioPlayer = RadioPlayer(this)
+        radioPlayer = RadioPlayer(this, this.assets)
 
         initialize()
     }
