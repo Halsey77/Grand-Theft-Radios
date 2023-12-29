@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
     }
 
     private fun onDownloadComplete(status: Int, url: String?) {
-        val stationName = RadiosMap.getInstance().getStationNameFromUrl(url)
+        val stationName = RadiosMap.instance?.getStationNameFromUrl(url)
         val text = if (status != DownloadManager.STATUS_SUCCESSFUL) "Failed to download radio station" else "$stationName has been added"
 
         Toast.makeText(this, text, Toast.LENGTH_LONG).show()
@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
     }
 
     private fun initialize() {
-        RadiosMap.getInstance() //initialize the maps
+        RadiosMap.instance //initialize the maps
 
         initGameSpinner()
         initStationSpinner()
@@ -67,9 +67,9 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
         }
 
         playButton.setOnClickListener {
-            val radio = RadiosMap.getInstance().getRadio(gameName, stationName)
+            val radio = RadiosMap.instance?.getRadio(gameName, stationName)
 
-            if(!radioDownloadManager.isStationDownloaded(radio.url)) {
+            if(!radioDownloadManager.isStationDownloaded(radio?.url)) {
                 Toast.makeText(this, "Please download the station first", Toast.LENGTH_LONG).show()
             }
             else {
@@ -79,12 +79,12 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
         }
 
         gameName = RadiosMap.GTA_GAMES[0]
-        stationName = RadiosMap.getInstance().getRadiosOfGame(gameName)[0]
+        stationName = RadiosMap.instance?.getRadiosOfGame(gameName)?.get(0) ?: ""
     }
 
     private fun applyStateToPlayButton() {
-        val radio = RadiosMap.getInstance().getRadio(gameName, stationName)
-        playButton.isEnabled = radioDownloadManager.isStationDownloaded(radio.url)
+        val radio = RadiosMap.instance?.getRadio(gameName, stationName)
+        playButton.isEnabled = radioDownloadManager.isStationDownloaded(radio?.url)
 
         val mp3FilePath = radioDownloadManager.getAbsoluteFilePath(radio)
         if(radioPlayer.isRadioStationPlaying(mp3FilePath)) {
@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
     }
 
     private fun downloadStation() {
-        val radio = RadiosMap.getInstance().getRadio(gameName, stationName)
+        val radio = RadiosMap.instance?.getRadio(gameName, stationName)
         radioDownloadManager.startDownload(radio)
     }
 
@@ -149,7 +149,11 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
     }
 
     private fun setStationsSpinnerValues(gameName: String) {
-        val stations = RadiosMap.getInstance().getRadiosOfGame(gameName)
+        val stations = RadiosMap.instance?.getRadiosOfGame(gameName)
+        if(stations == null) {
+            Toast.makeText(this, "Failed to get stations of $gameName", Toast.LENGTH_LONG).show()
+            return
+        }
 
         ArrayAdapter(
             this,
@@ -164,7 +168,12 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
     }
 
     private fun applyStateToDownloadButton() {
-        val radio = RadiosMap.getInstance().getRadio(gameName, stationName)
+        val radio = RadiosMap.instance?.getRadio(gameName, stationName)
+        if(radio == null) {
+            Toast.makeText(this, "Failed to get radio station", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val isBeingDownload = radioDownloadManager.isStationBeingDownloaded(radio.url)
         val hasBeenDownloaded = radioDownloadManager.isStationDownloaded(radio.url)
 

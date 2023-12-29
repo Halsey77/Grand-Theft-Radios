@@ -70,7 +70,9 @@ class RadioDownloadManager(private val context: Context) {
         return uri
     }
 
-    fun startDownload(radio: Radio) {
+    fun startDownload(radio: Radio?) {
+        if(radio == null) throw IllegalArgumentException("Radio is null, cannot start download")
+
         val request = DownloadManager.Request(Uri.parse(radio.url))
         request.setTitle("Downloading ${radio.name}")
         request.setDescription("Downloading radio station ${radio.name}...")
@@ -89,11 +91,13 @@ class RadioDownloadManager(private val context: Context) {
         )
     }
 
-    fun isStationDownloaded(stationUrl: String): Boolean {
+    fun isStationDownloaded(stationUrl: String?): Boolean {
         return isStationInStatus(stationUrl, DownloadManager.STATUS_SUCCESSFUL)
     }
 
-    private fun isStationInStatus(stationUrl: String, status: Int): Boolean {
+    private fun isStationInStatus(stationUrl: String?, status: Int): Boolean {
+        if(stationUrl == null) return false
+
         val query = DownloadManager.Query()
         query.setFilterByStatus(status)
 
@@ -124,7 +128,9 @@ class RadioDownloadManager(private val context: Context) {
         }
     }
 
-    fun getAbsoluteFilePath(radio: Radio): String {
+    fun getAbsoluteFilePath(radio: Radio?): String {
+        if(radio == null) throw IllegalArgumentException("Radio is null")
+
         val externalFilesDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
         return File(externalFilesDir, radio.fileName).absolutePath
     }
