@@ -215,3 +215,9 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
         applyStateToPlayButton()
     }
 }
+
+//TODO: Update app icon
+//TODO: Add a notification player for the radio player
+//TODO: Update spinner to be more beautiful
+//TODO: Add a button to delete the station
+//TODO: Update the UI to be more beautiful
