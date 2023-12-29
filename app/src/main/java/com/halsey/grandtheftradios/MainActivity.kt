@@ -86,6 +86,8 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
         val radio = RadiosMap.instance?.getRadio(gameName, stationName)
         playButton.isEnabled = radioDownloadManager.isStationDownloaded(radio?.url)
 
+        if(radio == null) return;
+
         val mp3FilePath = radioDownloadManager.getAbsoluteFilePath(radio)
         if(radioPlayer.isRadioStationPlaying(mp3FilePath)) {
             playButton.text = getString(R.string.button_pause)
@@ -169,8 +171,11 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
 
     private fun applyStateToDownloadButton() {
         val radio = RadiosMap.instance?.getRadio(gameName, stationName)
+
         if(radio == null) {
-            Toast.makeText(this, "Failed to get radio station", Toast.LENGTH_SHORT).show()
+            downloadButton.text = getString(R.string.button_download)
+            downloadButton.isEnabled = false
+            hideProgressBar()
             return
         }
 
