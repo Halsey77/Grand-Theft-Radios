@@ -1,10 +1,10 @@
 package com.halsey.grandtheftradios
 
 import android.app.DownloadManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import com.halsey.grandtheftradios.RadioObjects.RadioDownloadManager
 import com.halsey.grandtheftradios.RadioObjects.RadioPlayer
 import com.halsey.grandtheftradios.RadioObjects.RadiosMap
@@ -44,7 +44,8 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
 
     private fun onDownloadComplete(status: Int, url: String?) {
         val stationName = RadiosMap.instance?.getStationNameFromUrl(url)
-        val text = if (status != DownloadManager.STATUS_SUCCESSFUL) "Failed to download radio station" else "$stationName has been added"
+        val text =
+            if (status != DownloadManager.STATUS_SUCCESSFUL) "Failed to download radio station" else "$stationName has been added"
 
         Toast.makeText(this, text, Toast.LENGTH_LONG).show()
         applyStateToDownloadButton()
@@ -69,10 +70,9 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
         playButton.setOnClickListener {
             val radio = RadiosMap.instance?.getRadio(gameName, stationName)
 
-            if(!radioDownloadManager.isStationDownloaded(radio?.url)) {
+            if (!radioDownloadManager.isStationDownloaded(radio?.url)) {
                 Toast.makeText(this, "Please download the station first", Toast.LENGTH_LONG).show()
-            }
-            else {
+            } else {
                 val mp3FilePath = radioDownloadManager.getAbsoluteFilePath(radio)
                 radioPlayer.insertStationToPlayer(mp3FilePath)
             }
@@ -86,10 +86,10 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
         val radio = RadiosMap.instance?.getRadio(gameName, stationName)
         playButton.isEnabled = radioDownloadManager.isStationDownloaded(radio?.url)
 
-        if(radio == null) return;
+        if (radio == null) return
 
         val mp3FilePath = radioDownloadManager.getAbsoluteFilePath(radio)
-        if(radioPlayer.isRadioStationPlaying(mp3FilePath)) {
+        if (radioPlayer.isRadioStationPlaying(mp3FilePath)) {
             playButton.text = getString(R.string.button_pause)
         } else {
             playButton.text = getString(R.string.button_play)
@@ -152,7 +152,7 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
 
     private fun setStationsSpinnerValues(gameName: String) {
         val stations = RadiosMap.instance?.getRadiosOfGame(gameName)
-        if(stations == null) {
+        if (stations == null) {
             Toast.makeText(this, "Failed to get stations of $gameName", Toast.LENGTH_LONG).show()
             return
         }
@@ -172,7 +172,7 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
     private fun applyStateToDownloadButton() {
         val radio = RadiosMap.instance?.getRadio(gameName, stationName)
 
-        if(radio == null) {
+        if (radio == null) {
             downloadButton.text = getString(R.string.button_download)
             downloadButton.isEnabled = false
             hideProgressBar()
@@ -182,11 +182,11 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
         val isBeingDownload = radioDownloadManager.isStationBeingDownloaded(radio.url)
         val hasBeenDownloaded = radioDownloadManager.isStationDownloaded(radio.url)
 
-        if(isBeingDownload) {
+        if (isBeingDownload) {
             downloadButton.text = getString(R.string.button_is_downloading)
             downloadButton.isEnabled = false
             showProgressBar()
-        } else if(hasBeenDownloaded) {
+        } else if (hasBeenDownloaded) {
             downloadButton.text = getString(R.string.button_downloaded)
             downloadButton.isEnabled = false
             hideProgressBar()

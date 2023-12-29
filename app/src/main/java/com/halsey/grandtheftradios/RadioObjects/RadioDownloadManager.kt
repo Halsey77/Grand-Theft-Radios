@@ -30,7 +30,8 @@ class RadioDownloadManager(private val context: Context) {
 
                 if (downloadId != null && downloadId != -1L) {
                     val url = getDownloadUrl(downloadId)
-                    val status = if(isDownloadFailed(downloadId)) DownloadManager.STATUS_FAILED else DownloadManager.STATUS_SUCCESSFUL
+                    val status =
+                        if (isDownloadFailed(downloadId)) DownloadManager.STATUS_FAILED else DownloadManager.STATUS_SUCCESSFUL
 
                     onDownloadCompleteCallbacks.forEach { it(status, url) }
                 }
@@ -46,7 +47,7 @@ class RadioDownloadManager(private val context: Context) {
 
         val cursor = downloadManager.query(query)
         var status = DownloadManager.STATUS_FAILED
-        if(cursor != null && cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
             val colIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
             status = cursor.getInt(colIndex)
             cursor.close()
@@ -61,7 +62,7 @@ class RadioDownloadManager(private val context: Context) {
 
         val cursor = downloadManager.query(query)
         var uri: String? = null
-        if(cursor !== null && cursor.moveToFirst()) {
+        if (cursor !== null && cursor.moveToFirst()) {
             val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_URI)
             uri = cursor.getString(columnIndex)
             cursor.close()
@@ -71,7 +72,7 @@ class RadioDownloadManager(private val context: Context) {
     }
 
     fun startDownload(radio: Radio?) {
-        if(radio == null) throw IllegalArgumentException("Radio is null, cannot start download")
+        if (radio == null) throw IllegalArgumentException("Radio is null, cannot start download")
 
         val request = DownloadManager.Request(Uri.parse(radio.url))
         request.setTitle("Downloading ${radio.name}")
@@ -84,10 +85,11 @@ class RadioDownloadManager(private val context: Context) {
     }
 
     fun isStationBeingDownloaded(stationUrl: String): Boolean {
-        return isStationInStatus(stationUrl,
+        return isStationInStatus(
+            stationUrl,
             DownloadManager.STATUS_RUNNING or
-                DownloadManager.STATUS_PAUSED or
-                DownloadManager.STATUS_PENDING
+                    DownloadManager.STATUS_PAUSED or
+                    DownloadManager.STATUS_PENDING
         )
     }
 
@@ -96,18 +98,18 @@ class RadioDownloadManager(private val context: Context) {
     }
 
     private fun isStationInStatus(stationUrl: String?, status: Int): Boolean {
-        if(stationUrl == null) return false
+        if (stationUrl == null) return false
 
         val query = DownloadManager.Query()
         query.setFilterByStatus(status)
 
         val cursor = downloadManager.query(query)
-        while(cursor.moveToNext()) {
+        while (cursor.moveToNext()) {
             val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_URI)
             val uri = cursor.getString(columnIndex)
 
             Log.v("RadioDownloadManager", "Checking $uri of status $status and ${uri == stationUrl}")
-            if(uri == stationUrl) {
+            if (uri == stationUrl) {
                 cursor.close()
                 return true
             }
@@ -129,7 +131,7 @@ class RadioDownloadManager(private val context: Context) {
     }
 
     fun getAbsoluteFilePath(radio: Radio?): String {
-        if(radio == null) throw IllegalArgumentException("Radio is null")
+        if (radio == null) throw IllegalArgumentException("Radio is null")
 
         val externalFilesDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
         return File(externalFilesDir, radio.fileName).absolutePath

@@ -4,7 +4,7 @@ import android.content.res.AssetFileDescriptor
 import android.content.res.AssetManager
 import android.media.MediaPlayer
 import android.util.Log
-import java.util.Random
+import java.util.*
 
 class RadioPlayer(private val callback: RadioPlayerCallback, private val assetManager: AssetManager) {
     private var mediaPlayer: MediaPlayer? = null
@@ -43,7 +43,10 @@ class RadioPlayer(private val callback: RadioPlayerCallback, private val assetMa
             try {
                 val staticRadioSoundFileDecriptor = getRandomStaticRadioSoundFileDecriptor()
                 if (staticRadioSoundFileDecriptor == null) {
-                    Log.e("RadioPlayer", "Failed to play static radio sound because no static radio sound file was found")
+                    Log.e(
+                        "RadioPlayer",
+                        "Failed to play static radio sound because no static radio sound file was found"
+                    )
                     return
                 }
 
