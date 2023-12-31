@@ -1,18 +1,27 @@
-package com.halsey.grandtheftradios.RadioObjects
+package com.halsey.grandtheftradios.radio_objects
 
+import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.content.res.AssetManager
 import android.media.MediaPlayer
 import android.util.Log
+import com.halsey.grandtheftradios.notification.RadioPlayerNotificationHelper
 import java.util.*
 
-class RadioPlayer(private val callback: RadioPlayerCallback, private val assetManager: AssetManager) {
+class RadioPlayer(private val callback: RadioPlayerCallback, private val assetManager: AssetManager, context: Context) {
     private var mediaPlayer: MediaPlayer? = null
     private var state = RadioPlayerState()
     private var staticSoundPlayer: MediaPlayer? = null
     private val maxStartingPointPortion = 0.8f
+    private val notificationManager: RadioPlayerNotificationHelper = RadioPlayerNotificationHelper(context)
+
+    companion object {
+        val ACTION_PLAY = "Play"
+        val ACTION_PAUSE = "Pause"
+    }
 
     class RadioPlayerState {
+        var radio: Radio? = null
         var stationFilePath: String? = null
         var isPlaying = false
         var isPausing = false
@@ -22,13 +31,28 @@ class RadioPlayer(private val callback: RadioPlayerCallback, private val assetMa
         fun onRadioPlayerStateChanged(radioPlayerState: RadioPlayerState)
     }
 
-    fun getRandomStaticRadioSoundFileDecriptor(): AssetFileDescriptor? {
+    fun handleIntentAction(action: String) {
+        when (action) {
+            ACTION_PLAY -> {
+                unpauseStation(state.stationFilePath, state.radio)
+            }
+
+            ACTION_PAUSE -> {
+                pauseStation(state.stationFilePath, state.radio)
+            }
+        }
+        showNotificationPlayer()
+    }
+
+    private fun showNotificationPlayer() {
+        notificationManager.showNotificationPlayer(state.isPlaying, state.radio)
+    }
+
+    private fun getRandomStaticRadioSoundFileDecriptor(): AssetFileDescriptor? {
         val staticFiles = assetManager.list("radio_statics")
 
         if (!staticFiles.isNullOrEmpty()) {
-            val randomIndex = (staticFiles.indices).random()
-            val randomStaticFile = staticFiles[randomIndex]
-
+            val randomStaticFile = staticFiles.random()
             return assetManager.openFd("radio_statics/$randomStaticFile")
         }
         return null
@@ -71,35 +95,39 @@ class RadioPlayer(private val callback: RadioPlayerCallback, private val assetMa
         }
     }
 
-    fun insertStationToPlayer(stationFilePath: String) {
+    fun insertStationToPlayer(stationFilePath: String, radio: Radio?) {
         if (state.isPlaying) { //if a station is playing
             if (state.stationFilePath == stationFilePath) { //if stations are the same
-                pauseStation(stationFilePath)
+                pauseStation(stationFilePath, radio)
             } else {  //if stations are different
                 stopStation()   //stop the current station
-                playStation(stationFilePath)    //play the new station
+                playStation(stationFilePath, radio)    //play the new station
             }
         } else {    //if no station is playing or a station is paused
             if (state.stationFilePath == stationFilePath) {
-                unpauseStation(stationFilePath)
+                unpauseStation(stationFilePath, radio)
             } else {
-                playStation(stationFilePath)
+                playStation(stationFilePath, radio)
             }
         }
     }
 
-    private fun unpauseStation(filePath: String) {
+    private fun unpauseStation(filePath: String?, radio: Radio?) {
         playStaticRadioSound {
             mediaPlayer?.start()
-            setPlayingState(filePath)
+            setPlayingState(filePath, radio)
+            showNotificationPlayer()
             callback.onRadioPlayerStateChanged(state)
         }
     }
 
-    private fun playStation(stationFilePath: String) {
+    private fun playStation(stationFilePath: String?, radio: Radio?) {
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer()
         }
+
+        if (stationFilePath == null) return
+
         mediaPlayer?.reset()
         mediaPlayer?.apply {
             try {
@@ -115,7 +143,8 @@ class RadioPlayer(private val callback: RadioPlayerCallback, private val assetMa
                         mediaPlayer?.seekTo(randomStartPosition)
 
                         start()
-                        setPlayingState(stationFilePath)
+                        setPlayingState(stationFilePath, radio)
+                        showNotificationPlayer()
                         callback.onRadioPlayerStateChanged(state)
                     }
                 }
@@ -126,9 +155,10 @@ class RadioPlayer(private val callback: RadioPlayerCallback, private val assetMa
         }
     }
 
-    private fun pauseStation(filePath: String) {
+    private fun pauseStation(filePath: String?, radio: Radio?) {
         mediaPlayer?.pause()
-        setPausingState(filePath)
+        setPausingState(filePath, radio)
+        showNotificationPlayer()
         callback.onRadioPlayerStateChanged(state)
     }
 
@@ -137,29 +167,37 @@ class RadioPlayer(private val callback: RadioPlayerCallback, private val assetMa
         mediaPlayer?.release()
         mediaPlayer = null
         setStoppedState()
+        notificationManager.hideNotificationPlayer()
         callback.onRadioPlayerStateChanged(state)
     }
 
-    private fun setPlayingState(filePath: String) {
+    private fun setPlayingState(filePath: String?, radio: Radio?) {
         state.isPlaying = true
         state.isPausing = false
         state.stationFilePath = filePath
+        state.radio = radio
     }
 
-    private fun setPausingState(filePath: String) {
+    private fun setPausingState(filePath: String?, radio: Radio?) {
         state.isPlaying = false
         state.isPausing = true
         state.stationFilePath = filePath
+        state.radio = radio
     }
 
     private fun setStoppedState() {
         state.isPlaying = false
         state.isPausing = false
         state.stationFilePath = null
+        state.radio = null
     }
 
     fun isRadioStationPlaying(filePath: String): Boolean {
-        return state.isPlaying && state.stationFilePath == filePath
+        return isPlayerPlaying() && state.stationFilePath == filePath
+    }
+
+    fun isPlayerPlaying(): Boolean {
+        return state.isPlaying
     }
 
     fun onDestroy() {

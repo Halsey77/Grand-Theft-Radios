@@ -1,4 +1,4 @@
-package com.halsey.grandtheftradios.RadioObjects
+package com.halsey.grandtheftradios.radio_objects
 
 class RadiosMap private constructor() {
     init {

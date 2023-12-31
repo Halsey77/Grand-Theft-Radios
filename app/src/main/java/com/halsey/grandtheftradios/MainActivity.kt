@@ -1,13 +1,16 @@
 package com.halsey.grandtheftradios
 
 import android.app.DownloadManager
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.halsey.grandtheftradios.RadioObjects.RadioDownloadManager
-import com.halsey.grandtheftradios.RadioObjects.RadioPlayer
-import com.halsey.grandtheftradios.RadioObjects.RadiosMap
+import com.halsey.grandtheftradios.notification.RadioPlayerNotificationHelper
+import com.halsey.grandtheftradios.radio_objects.RadioDownloadManager
+import com.halsey.grandtheftradios.radio_objects.RadioPlayer
+import com.halsey.grandtheftradios.radio_objects.RadiosMap
+import java.io.File
 
 class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
     private lateinit var radioDownloadManager: RadioDownloadManager
@@ -27,6 +30,9 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val dexOutputDir: File = codeCacheDir
+        dexOutputDir.setReadOnly()
+
         //initialize variables
         gameSpinner = findViewById(R.id.gameSpinner)
         stationSpinner = findViewById(R.id.stationSpinner)
@@ -37,9 +43,19 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
         playButton = findViewById(R.id.playButton)
 
         radioDownloadManager = RadioDownloadManager(this)
-        radioPlayer = RadioPlayer(this, this.assets)
+        radioPlayer = RadioPlayer(this, this.assets, this)
 
         initialize()
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (intent != null) {
+            val requestCode = intent.getIntExtra("requestCode", -1)
+            if (requestCode == RadioPlayerNotificationHelper.INTENT_REQUEST_CODE) {
+                radioPlayer.handleIntentAction(intent.action ?: "")
+            }
+        }
     }
 
     private fun onDownloadComplete(status: Int, url: String?) {
@@ -74,7 +90,7 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
                 Toast.makeText(this, "Please download the station first", Toast.LENGTH_LONG).show()
             } else {
                 val mp3FilePath = radioDownloadManager.getAbsoluteFilePath(radio)
-                radioPlayer.insertStationToPlayer(mp3FilePath)
+                radioPlayer.insertStationToPlayer(mp3FilePath, radio)
             }
         }
 
