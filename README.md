@@ -14,6 +14,8 @@
 Download the `.apk` file from the releases page and install it on your Android device.
 Boom, you're done. Now choose a radio station, download and listen to it whenever you want.
 
+Or you can download the source code, then build it and install on your device.
+
 ## This app could be better, how do I contribute?
 
 Fork this repository, make your changes and open a pull request. I'll take a look at it and merge it if it's good.
