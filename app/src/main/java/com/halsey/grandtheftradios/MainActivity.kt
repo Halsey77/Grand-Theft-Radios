@@ -271,7 +271,6 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-//TODO: Pause the radio when headphones are unplugged
 //TODO: Update spinner to be more beautiful
 //TODO: Add a button to delete the station
 //TODO: Update the UI to be more beautiful

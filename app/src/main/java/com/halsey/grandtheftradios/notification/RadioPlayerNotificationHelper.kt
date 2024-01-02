@@ -8,6 +8,8 @@ import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.halsey.grandtheftradios.R
@@ -42,6 +44,7 @@ class RadioPlayerNotificationHelper(private val context: Context) {
         notiManagerCompat.createNotificationChannel(channel)
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun updateNotificationAndShow(isPlaying: Boolean, radio: Radio?) {
         val notification = getNotification(isPlaying, radio)
         RequestPermission.requestNotificationPermission(context) {
