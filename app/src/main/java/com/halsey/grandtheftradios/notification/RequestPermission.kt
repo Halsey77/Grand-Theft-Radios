@@ -3,7 +3,6 @@ package com.halsey.grandtheftradios.notification
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -29,8 +28,7 @@ class RequestPermission() {
                                 .show()
                         }
                     }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 return
             } else {
                 afterPermissionGranted()

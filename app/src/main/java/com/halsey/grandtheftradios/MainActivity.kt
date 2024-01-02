@@ -1,22 +1,27 @@
 package com.halsey.grandtheftradios
 
 import android.app.DownloadManager
-import android.content.Intent
+import android.content.*
 import android.os.Bundle
+import android.os.IBinder
+import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.halsey.grandtheftradios.notification.RadioPlayerNotificationHelper
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.halsey.grandtheftradios.radio_objects.RadioDownloadManager
-import com.halsey.grandtheftradios.radio_objects.RadioPlayer
+import com.halsey.grandtheftradios.radio_objects.RadioPlayerService
 import com.halsey.grandtheftradios.radio_objects.RadiosMap
 import java.io.File
 
-class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
+class MainActivity : AppCompatActivity() {
     private lateinit var radioDownloadManager: RadioDownloadManager
-    private lateinit var radioPlayer: RadioPlayer
+    private lateinit var radioPlayerService: RadioPlayerService
+    private var isRadioPlayerServiceBound = false
     private var gameName = ""
     private var stationName = ""
+    private var radioServiceReceiver: BroadcastReceiver? = null
+    private var filter: IntentFilter? = null
 
     private lateinit var gameSpinner: Spinner
     private lateinit var stationSpinner: Spinner
@@ -43,19 +48,46 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
         playButton = findViewById(R.id.playButton)
 
         radioDownloadManager = RadioDownloadManager(this)
-        radioPlayer = RadioPlayer(this, this.assets, this)
 
-        initialize()
+        setupBroadcastReceiver()
+        startAndBindRadioPlayerService()
     }
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        if (intent != null) {
-            val requestCode = intent.getIntExtra("requestCode", -1)
-            if (requestCode == RadioPlayerNotificationHelper.INTENT_REQUEST_CODE) {
-                radioPlayer.handleIntentAction(intent.action ?: "")
+    override fun onResume() {
+        super.onResume()
+        LocalBroadcastManager.getInstance(this).registerReceiver(radioServiceReceiver!!, filter!!)
+    }
+
+    private fun setupBroadcastReceiver() {
+        radioServiceReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                Log.v("MainActivity", "onReceive {'$'}{intent?.action}")
+                if (intent?.action == RadioPlayerService.RADIO_PLAYER_STATE_CHANGE) {
+                    onRadioPlayerStateChanged()
+                }
             }
         }
+        filter = IntentFilter(RadioPlayerService.RADIO_PLAYER_STATE_CHANGE)
+    }
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
+            val binder = p1 as RadioPlayerService.LocalBinder
+            radioPlayerService = binder.getService()
+            isRadioPlayerServiceBound = true
+
+            initialize()
+        }
+
+        override fun onServiceDisconnected(p0: ComponentName?) {
+            isRadioPlayerServiceBound = false
+        }
+    }
+
+    private fun startAndBindRadioPlayerService() {
+        val serviceIntent = Intent(this, RadioPlayerService::class.java)
+        startForegroundService(serviceIntent)
+        bindService(serviceIntent, serviceConnection, BIND_AUTO_CREATE)
     }
 
     private fun onDownloadComplete(status: Int, url: String?) {
@@ -70,6 +102,8 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
 
     private fun initialize() {
         RadiosMap.instance //initialize the maps
+        gameName = RadiosMap.GTA_GAMES[0]
+        stationName = RadiosMap.instance?.getRadiosOfGame(gameName)?.get(0) ?: ""
 
         initGameSpinner()
         initStationSpinner()
@@ -85,17 +119,13 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
 
         playButton.setOnClickListener {
             val radio = RadiosMap.instance?.getRadio(gameName, stationName)
-
             if (!radioDownloadManager.isStationDownloaded(radio?.url)) {
                 Toast.makeText(this, "Please download the station first", Toast.LENGTH_LONG).show()
             } else {
                 val mp3FilePath = radioDownloadManager.getAbsoluteFilePath(radio)
-                radioPlayer.insertStationToPlayer(mp3FilePath, radio)
+                radioPlayerService.insertStationToPlayer(mp3FilePath, radio)
             }
         }
-
-        gameName = RadiosMap.GTA_GAMES[0]
-        stationName = RadiosMap.instance?.getRadiosOfGame(gameName)?.get(0) ?: ""
     }
 
     private fun applyStateToPlayButton() {
@@ -105,7 +135,7 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
         if (radio == null) return
 
         val mp3FilePath = radioDownloadManager.getAbsoluteFilePath(radio)
-        if (radioPlayer.isRadioStationPlaying(mp3FilePath)) {
+        if (radioPlayerService.isRadioStationPlaying(mp3FilePath)) {
             playButton.text = getString(R.string.button_pause)
         } else {
             playButton.text = getString(R.string.button_play)
@@ -222,18 +252,20 @@ class MainActivity : AppCompatActivity(), RadioPlayer.RadioPlayerCallback {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         radioDownloadManager.onDestroy()
-        radioPlayer.onDestroy()
+        radioPlayerService.onDestroy()
+        unregisterReceiver(radioServiceReceiver)
+        if (isRadioPlayerServiceBound) unbindService(serviceConnection)
+        super.onDestroy()
     }
 
-    override fun onRadioPlayerStateChanged(radioPlayerState: RadioPlayer.RadioPlayerState) {
+    fun onRadioPlayerStateChanged() {
         applyStateToPlayButton()
     }
 }
 
-//TODO: Update app icon
-//TODO: Add a notification player for the radio player
+//TODO: Don't open app when play/pause button is pressed on notification
+//TODO: Pause the radio when headphones are unplugged
 //TODO: Update spinner to be more beautiful
 //TODO: Add a button to delete the station
 //TODO: Update the UI to be more beautiful

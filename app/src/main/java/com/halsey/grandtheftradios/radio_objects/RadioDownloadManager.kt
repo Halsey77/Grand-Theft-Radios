@@ -7,9 +7,7 @@ import android.content.Context.RECEIVER_NOT_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
-import android.util.Log
 import java.io.File
 
 class RadioDownloadManager(private val context: Context) {
@@ -40,20 +38,11 @@ class RadioDownloadManager(private val context: Context) {
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(
-                downloadCompleteReceiver,
-                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-                RECEIVER_NOT_EXPORTED
-            )
-        } else {
-            context.registerReceiver(
-                downloadCompleteReceiver,
-                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-                null,
-                null
-            )
-        }
+        context.registerReceiver(
+            downloadCompleteReceiver,
+            IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+            RECEIVER_NOT_EXPORTED
+        )
 
     }
 
@@ -124,7 +113,7 @@ class RadioDownloadManager(private val context: Context) {
             val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_URI)
             val uri = cursor.getString(columnIndex)
 
-            Log.v("RadioDownloadManager", "Checking $uri of status $status and ${uri == stationUrl}")
+//            Log.v("RadioDownloadManager", "Checking $uri of status $status and ${uri == stationUrl}")
             if (uri == stationUrl) {
                 cursor.close()
                 return true

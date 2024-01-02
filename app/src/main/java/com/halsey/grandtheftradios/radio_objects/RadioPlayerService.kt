@@ -1,23 +1,39 @@
 package com.halsey.grandtheftradios.radio_objects
 
-import android.content.Context
+import android.app.Service
+import android.content.Intent
 import android.content.res.AssetFileDescriptor
 import android.content.res.AssetManager
 import android.media.MediaPlayer
+import android.os.Binder
+import android.os.IBinder
 import android.util.Log
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.halsey.grandtheftradios.notification.RadioPlayerNotificationHelper
 import java.util.*
 
-class RadioPlayer(private val callback: RadioPlayerCallback, private val assetManager: AssetManager, context: Context) {
+class RadioPlayerService : Service() {
     private var mediaPlayer: MediaPlayer? = null
     private var state = RadioPlayerState()
     private var staticSoundPlayer: MediaPlayer? = null
-    private val maxStartingPointPortion = 0.8f
-    private val notificationManager: RadioPlayerNotificationHelper = RadioPlayerNotificationHelper(context)
+    private val maxStartingPointPortion = 0.9f
+    private val notificationManager: RadioPlayerNotificationHelper by lazy { RadioPlayerNotificationHelper(this) }
+    private val binder = LocalBinder()
+    private val assetsManager: AssetManager by lazy { assets }
 
     companion object {
+        val RADIO_PLAYER_STATE_CHANGE =
+            "com.halsey.grandtheftradios.radio_objects.RadioPlayerService.RADIO_PLAYER_STATE_CHANGE"
         val ACTION_PLAY = "Play"
         val ACTION_PAUSE = "Pause"
+    }
+
+    inner class LocalBinder : Binder() {
+        fun getService(): RadioPlayerService = this@RadioPlayerService
+    }
+
+    override fun onBind(intent: Intent?): IBinder {
+        return binder
     }
 
     class RadioPlayerState {
@@ -27,33 +43,64 @@ class RadioPlayer(private val callback: RadioPlayerCallback, private val assetMa
         var isPausing = false
     }
 
-    interface RadioPlayerCallback {
-        fun onRadioPlayerStateChanged(radioPlayerState: RadioPlayerState)
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent != null) {
+            handleIntentAction(intent)
+        }
+
+        startForeground(
+            RadioPlayerNotificationHelper.NOTIFICATION_ID,
+            notificationManager.getNotification(state.isPlaying, state.radio)
+        )
+
+        return START_STICKY
     }
 
-    fun handleIntentAction(action: String) {
-        when (action) {
+    private fun sendStateChangeToMainActivity() {
+        val intent = Intent(RADIO_PLAYER_STATE_CHANGE)
+        intent.putExtra("isPlaying", state.isPlaying)
+        intent.putExtra("isPausing", state.isPausing)
+        intent.putExtra("stationFilePath", state.stationFilePath)
+        intent.putExtra("gameName", state.radio?.game)
+        intent.putExtra("stationName", state.radio?.name)
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+    }
+
+    private fun handleIntentAction(intent: Intent) {
+        when (intent.action) {
+            RadioPlayerNotificationHelper.NOTIFICATION_INTENT -> {
+                handleIntentFromNotificationHelper(intent)
+            }
+        }
+    }
+
+    private fun handleIntentFromNotificationHelper(intent: Intent) {
+        val requestAction = intent.getStringExtra(RadioPlayerNotificationHelper.EXTRA_REQUEST_ACTION)
+        when (requestAction) {
             ACTION_PLAY -> {
-                unpauseStation(state.stationFilePath, state.radio)
+                if (state.isPausing) {
+                    unpauseStation(state.stationFilePath, state.radio)
+                } else {
+                    playStation(state.stationFilePath, state.radio)
+                }
             }
 
             ACTION_PAUSE -> {
                 pauseStation(state.stationFilePath, state.radio)
             }
         }
-        showNotificationPlayer()
     }
 
     private fun showNotificationPlayer() {
-        notificationManager.showNotificationPlayer(state.isPlaying, state.radio)
+        notificationManager.updateNotificationAndShow(state.isPlaying, state.radio)
     }
 
     private fun getRandomStaticRadioSoundFileDecriptor(): AssetFileDescriptor? {
-        val staticFiles = assetManager.list("radio_statics")
+        val staticFiles = assetsManager.list("radio_statics")
 
         if (!staticFiles.isNullOrEmpty()) {
             val randomStaticFile = staticFiles.random()
-            return assetManager.openFd("radio_statics/$randomStaticFile")
+            return assetsManager.openFd("radio_statics/$randomStaticFile")
         }
         return null
     }
@@ -117,7 +164,7 @@ class RadioPlayer(private val callback: RadioPlayerCallback, private val assetMa
             mediaPlayer?.start()
             setPlayingState(filePath, radio)
             showNotificationPlayer()
-            callback.onRadioPlayerStateChanged(state)
+            sendStateChangeToMainActivity()
         }
     }
 
@@ -145,7 +192,7 @@ class RadioPlayer(private val callback: RadioPlayerCallback, private val assetMa
                         start()
                         setPlayingState(stationFilePath, radio)
                         showNotificationPlayer()
-                        callback.onRadioPlayerStateChanged(state)
+                        sendStateChangeToMainActivity()
                     }
                 }
             } catch (e: Exception) {
@@ -159,7 +206,7 @@ class RadioPlayer(private val callback: RadioPlayerCallback, private val assetMa
         mediaPlayer?.pause()
         setPausingState(filePath, radio)
         showNotificationPlayer()
-        callback.onRadioPlayerStateChanged(state)
+        sendStateChangeToMainActivity()
     }
 
     private fun stopStation() {
@@ -168,7 +215,7 @@ class RadioPlayer(private val callback: RadioPlayerCallback, private val assetMa
         mediaPlayer = null
         setStoppedState()
         notificationManager.hideNotificationPlayer()
-        callback.onRadioPlayerStateChanged(state)
+        sendStateChangeToMainActivity()
     }
 
     private fun setPlayingState(filePath: String?, radio: Radio?) {
@@ -200,7 +247,8 @@ class RadioPlayer(private val callback: RadioPlayerCallback, private val assetMa
         return state.isPlaying
     }
 
-    fun onDestroy() {
+    override fun onDestroy() {
+        super.onDestroy()
         stopStation()
         staticSoundPlayer?.release()
     }

@@ -1,27 +1,30 @@
 package com.halsey.grandtheftradios.notification
 
-import android.annotation.SuppressLint
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.halsey.grandtheftradios.MainActivity
 import com.halsey.grandtheftradios.R
 import com.halsey.grandtheftradios.radio_objects.Radio
-import com.halsey.grandtheftradios.radio_objects.RadioPlayer
+import com.halsey.grandtheftradios.radio_objects.RadioPlayerService
 
 class RadioPlayerNotificationHelper(private val context: Context) {
     private val notiManagerCompat: NotificationManagerCompat = NotificationManagerCompat.from(context)
     private val CHANNEL_ID = "Grand Theft Radios"
-    private val NOTIFICATION_ID = 69420
     private var notificationBuilder: NotificationCompat.Builder? = null
 
     companion object {
         val INTENT_REQUEST_CODE = 69420
+        val NOTIFICATION_ID = 69420
+        val NOTIFICATION_INTENT =
+            "com.halsey.grandtheftradios.notification.RadioPlayerNotificationHelper.NOTIFICATION_INTENT"
+        val EXTRA_REQUEST_ACTION = "requestAction"
     }
 
     init {
@@ -31,7 +34,7 @@ class RadioPlayerNotificationHelper(private val context: Context) {
     private fun createNotificationChannel() {
         val name = "Grand Theft Radios"
         val descriptionText = "Listen to any GTA radio station!"
-        val importance = NotificationManager.IMPORTANCE_LOW
+        val importance = NotificationManager.IMPORTANCE_HIGH
         val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
             description = descriptionText
         }
@@ -39,36 +42,55 @@ class RadioPlayerNotificationHelper(private val context: Context) {
         notiManagerCompat.createNotificationChannel(channel)
     }
 
-    @SuppressLint("MissingPermission")
-    fun showNotificationPlayer(isPlaying: Boolean, radio: Radio?) {
-        val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
-            .setMediaSession(null)
-            .setShowActionsInCompactView(0)
-        val playPauseAction: NotificationCompat.Action = NotificationCompat.Action(
-            if (isPlaying) R.drawable.ic_notification_pause else R.drawable.ic_notification_play,
-            if (isPlaying) RadioPlayer.ACTION_PAUSE else RadioPlayer.ACTION_PLAY,
-            getPendingIntent(if (isPlaying) RadioPlayer.ACTION_PAUSE else RadioPlayer.ACTION_PLAY)
-        )
+    fun updateNotificationAndShow(isPlaying: Boolean, radio: Radio?) {
+        val notification = getNotification(isPlaying, radio)
+        RequestPermission.requestNotificationPermission(context) {
+            val notificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.notify(NOTIFICATION_ID, notification)
+        }
+    }
+
+    fun getNotification(isPlaying: Boolean, radio: Radio?): Notification {
+        val mediaStyle = getMediaStyle()
+        val playPauseAction: NotificationCompat.Action = createActionButton(isPlaying)
 
         if (notificationBuilder == null) {
             notificationBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
-
-            notificationBuilder!!.setSmallIcon(R.drawable.ic_notification_icon)
-            notificationBuilder!!.setContentTitle(radio?.name)
-            notificationBuilder!!.setContentText("You are listening to ${radio?.name} from ${radio?.game}")
-            notificationBuilder!!.setPriority(NotificationCompat.PRIORITY_LOW)
-            notificationBuilder!!.setOngoing(true)
-            notificationBuilder!!.setAutoCancel(false)
         }
 
+        setupNotificationBuilder(radio)
         notificationBuilder!!.clearActions()
         notificationBuilder!!.setStyle(mediaStyle)
             .addAction(playPauseAction)
 
-        val notification = notificationBuilder!!.build()
-        RequestPermission.requestNotificationPermission(context) {
-            notiManagerCompat.notify(NOTIFICATION_ID, notification)
-        }
+        return notificationBuilder!!.build()
+    }
+
+    private fun setupNotificationBuilder(radio: Radio?) {
+        notificationBuilder!!.setSmallIcon(R.drawable.ic_notification_icon)
+
+        val contentTitle = radio?.name ?: "Grand Theft Radios"
+        val contentText =
+            if (radio != null) "You are listening to ${radio.name} from ${radio.game}" else "Choose a radio station to listen to"
+        notificationBuilder!!.setContentTitle(contentTitle)
+        notificationBuilder!!.setContentText(contentText)
+
+        notificationBuilder!!.setPriority(NotificationCompat.PRIORITY_HIGH)
+        notificationBuilder!!.setAutoCancel(false)
+    }
+
+    private fun getMediaStyle(): androidx.media.app.NotificationCompat.MediaStyle? =
+        androidx.media.app.NotificationCompat.MediaStyle()
+            .setMediaSession(null)
+            .setShowActionsInCompactView(0)
+
+    private fun createActionButton(isPlaying: Boolean): NotificationCompat.Action {
+        return NotificationCompat.Action(
+            if (isPlaying) R.drawable.ic_notification_pause else R.drawable.ic_notification_play,
+            if (isPlaying) RadioPlayerService.ACTION_PAUSE else RadioPlayerService.ACTION_PLAY,
+            getPendingIntent(if (isPlaying) RadioPlayerService.ACTION_PAUSE else RadioPlayerService.ACTION_PLAY)
+        )
     }
 
     fun hideNotificationPlayer() {
@@ -76,9 +98,9 @@ class RadioPlayerNotificationHelper(private val context: Context) {
     }
 
     private fun getPendingIntent(action: String): PendingIntent {
-        val intent = Intent(context, MainActivity::class.java)
-        intent.action = action
-        intent.putExtra("requestCode", INTENT_REQUEST_CODE)
-        return PendingIntent.getActivity(context, INTENT_REQUEST_CODE, intent, FLAG_IMMUTABLE)
+        val intent = Intent(context, RadioPlayerService::class.java)
+        intent.action = NOTIFICATION_INTENT
+        intent.putExtra(EXTRA_REQUEST_ACTION, action)
+        return PendingIntent.getService(context, INTENT_REQUEST_CODE, intent, FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT)
     }
 }
