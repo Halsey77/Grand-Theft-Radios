@@ -8,7 +8,6 @@ import android.media.MediaPlayer
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.halsey.grandtheftradios.notification.RadioPlayerNotificationHelper
 import java.util.*
 
@@ -63,7 +62,8 @@ class RadioPlayerService : Service() {
         intent.putExtra("stationFilePath", state.stationFilePath)
         intent.putExtra("gameName", state.radio?.game)
         intent.putExtra("stationName", state.radio?.name)
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+//        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+        sendBroadcast(intent)
     }
 
     private fun handleIntentAction(intent: Intent) {
@@ -251,5 +251,9 @@ class RadioPlayerService : Service() {
         super.onDestroy()
         stopStation()
         staticSoundPlayer?.release()
+    }
+
+    fun onAudioBecomingNoisy() {
+        pauseStation(state.stationFilePath, state.radio)
     }
 }

@@ -2,13 +2,13 @@ package com.halsey.grandtheftradios
 
 import android.app.DownloadManager
 import android.content.*
+import android.media.AudioManager
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.halsey.grandtheftradios.radio_objects.RadioDownloadManager
 import com.halsey.grandtheftradios.radio_objects.RadioPlayerService
 import com.halsey.grandtheftradios.radio_objects.RadiosMap
@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
     private var isRadioPlayerServiceBound = false
     private var gameName = ""
     private var stationName = ""
-    private var radioServiceReceiver: BroadcastReceiver? = null
+    private var broadcastReceiver: BroadcastReceiver? = null
     private var filter: IntentFilter? = null
 
     private lateinit var gameSpinner: Spinner
@@ -55,19 +55,26 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        LocalBroadcastManager.getInstance(this).registerReceiver(radioServiceReceiver!!, filter!!)
+//        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver!!, filter!!)
+        registerReceiver(broadcastReceiver!!, filter!!)
     }
 
     private fun setupBroadcastReceiver() {
-        radioServiceReceiver = object : BroadcastReceiver() {
+        broadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                Log.v("MainActivity", "onReceive {'$'}{intent?.action}")
-                if (intent?.action == RadioPlayerService.RADIO_PLAYER_STATE_CHANGE) {
-                    onRadioPlayerStateChanged()
+                when (intent?.action) {
+                    RadioPlayerService.RADIO_PLAYER_STATE_CHANGE -> onRadioPlayerStateChanged()
+                    AudioManager.ACTION_AUDIO_BECOMING_NOISY -> {
+                        Log.e("MainActivity", "Headphones unplugged")
+                        radioPlayerService.onAudioBecomingNoisy()
+                        applyStateToPlayButton()
+                    }
                 }
+
             }
         }
         filter = IntentFilter(RadioPlayerService.RADIO_PLAYER_STATE_CHANGE)
+        filter?.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
     }
 
     private val serviceConnection = object : ServiceConnection {
@@ -254,7 +261,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         radioDownloadManager.onDestroy()
         radioPlayerService.onDestroy()
-        unregisterReceiver(radioServiceReceiver)
+        unregisterReceiver(broadcastReceiver)
         if (isRadioPlayerServiceBound) unbindService(serviceConnection)
         super.onDestroy()
     }
@@ -264,7 +271,6 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-//TODO: Don't open app when play/pause button is pressed on notification
 //TODO: Pause the radio when headphones are unplugged
 //TODO: Update spinner to be more beautiful
 //TODO: Add a button to delete the station

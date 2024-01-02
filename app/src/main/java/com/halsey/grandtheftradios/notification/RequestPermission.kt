@@ -3,13 +3,16 @@ package com.halsey.grandtheftradios.notification
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.halsey.grandtheftradios.MainActivity
 
 class RequestPermission() {
     companion object {
+        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         fun requestNotificationPermission(context: Context, afterPermissionGranted: () -> Unit) {
             if (ContextCompat.checkSelfPermission(
                     context,
