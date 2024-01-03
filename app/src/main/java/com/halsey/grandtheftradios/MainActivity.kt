@@ -9,10 +9,16 @@ import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.carousel.CarouselLayoutManager
+import com.google.android.material.carousel.CarouselSnapHelper
+import com.google.android.material.carousel.HeroCarouselStrategy
+import com.halsey.grandtheftradios.custom.CarouselAdapter
 import com.halsey.grandtheftradios.radio_objects.RadioDownloadManager
 import com.halsey.grandtheftradios.radio_objects.RadioPlayerService
 import com.halsey.grandtheftradios.radio_objects.RadiosMap
 import java.io.File
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var radioDownloadManager: RadioDownloadManager
@@ -23,7 +29,6 @@ class MainActivity : AppCompatActivity() {
     private var broadcastReceiver: BroadcastReceiver? = null
     private var filter: IntentFilter? = null
 
-    private lateinit var gameSpinner: Spinner
     private lateinit var stationSpinner: Spinner
     private lateinit var gameText: TextView
     private lateinit var stationText: TextView
@@ -39,7 +44,6 @@ class MainActivity : AppCompatActivity() {
         dexOutputDir.setReadOnly()
 
         //initialize variables
-        gameSpinner = findViewById(R.id.gameSpinner)
         stationSpinner = findViewById(R.id.stationSpinner)
         gameText = findViewById(R.id.gameText)
         stationText = findViewById(R.id.stationText)
@@ -56,7 +60,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 //        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver!!, filter!!)
-        registerReceiver(broadcastReceiver!!, filter!!)
+        registerReceiver(broadcastReceiver!!, filter!!, RECEIVER_EXPORTED)
     }
 
     private fun setupBroadcastReceiver() {
@@ -112,7 +116,7 @@ class MainActivity : AppCompatActivity() {
         gameName = RadiosMap.GTA_GAMES[0]
         stationName = RadiosMap.instance?.getRadiosOfGame(gameName)?.get(0) ?: ""
 
-        initGameSpinner()
+        setupGameCarousel()
         initStationSpinner()
 
         radioDownloadManager.addOnDownloadCompleteCallback { status, url ->
@@ -133,6 +137,35 @@ class MainActivity : AppCompatActivity() {
                 radioPlayerService.insertStationToPlayer(mp3FilePath, radio)
             }
         }
+    }
+
+    private fun setupGameCarousel() {
+        val recyclerView = findViewById<RecyclerView>(R.id.game_recycler_view)
+
+        val layoutManager = CarouselLayoutManager(HeroCarouselStrategy())
+        layoutManager.carouselAlignment = CarouselLayoutManager.ALIGNMENT_CENTER
+        recyclerView.layoutManager = layoutManager
+
+        val snapHelper = CarouselSnapHelper()
+        snapHelper.attachToRecyclerView(recyclerView)
+
+        val adapter = CarouselAdapter(this@MainActivity, RadiosMap.GTA_GAMES_DRAWABLES)
+        recyclerView.adapter = adapter
+
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                if (RecyclerView.SCROLL_STATE_IDLE == newState) {
+                    val centerView = snapHelper.findSnapView(layoutManager)
+                    val pos = layoutManager.getPosition(centerView!!)
+                    gameName = RadiosMap.GTA_GAMES[pos]
+                    setStationsSpinnerValues(gameName)
+                    gameText.text = gameName
+                    applyStateToDownloadButton()
+                    applyStateToPlayButton()
+                }
+            }
+        })
+        (recyclerView.layoutManager as CarouselLayoutManager).smoothScrollToPosition(recyclerView, null, 2)
     }
 
     private fun applyStateToPlayButton() {
@@ -169,38 +202,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         stationSpinner.setSelection(0)
-    }
-
-    private fun initGameSpinner() {
-        ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            RadiosMap.GTA_GAMES,
-        ).also { adapter ->
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            gameSpinner.adapter = adapter
-        }
-
-        //make station spinner and gameText change when game spinner changes
-        gameSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>,
-                view: View, position: Int, id: Long
-            ) {
-
-                val name = gameSpinner.selectedItem.toString()
-                setStationsSpinnerValues(name)
-                gameText.text = name
-                gameName = name
-                applyStateToDownloadButton()
-                applyStateToPlayButton()
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {
-                //nothing happens
-            }
-        }
-        gameSpinner.setSelection(0)
     }
 
     private fun setStationsSpinnerValues(gameName: String) {

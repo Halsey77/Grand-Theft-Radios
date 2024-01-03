@@ -1,5 +1,7 @@
 package com.halsey.grandtheftradios.radio_objects
 
+import com.halsey.grandtheftradios.R
+
 class RadiosMap private constructor() {
     init {
         addGTA3Radios()
@@ -395,6 +397,13 @@ class RadiosMap private constructor() {
 
     companion object {
         val GTA_GAMES = arrayOf("GTA 3", "GTA Vice City", "GTA San Andreas", "GTA 4", "GTA 5")
+        val GTA_GAMES_DRAWABLES = arrayListOf<Int>(
+            R.drawable.gta_3_icon,
+            R.drawable.gta_vc_icon,
+            R.drawable.gta_sa_icon,
+            R.drawable.gta_4_icon,
+            R.drawable.gta_5_icon
+        )
         var instance: RadiosMap? = null
             get() {
                 if (field == null) {
