@@ -27,7 +27,7 @@ class RequestPermission() {
                         if (isGranted) {
                             afterPermissionGranted()
                         } else {
-                            Toast.makeText(context, "Player cannot be shown in notification bar", Toast.LENGTH_LONG)
+                            Toast.makeText(context, "Player need notification permission to work", Toast.LENGTH_LONG)
                                 .show()
                         }
                     }

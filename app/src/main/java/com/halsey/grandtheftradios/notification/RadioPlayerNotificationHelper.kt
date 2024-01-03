@@ -36,7 +36,7 @@ class RadioPlayerNotificationHelper(private val context: Context) {
     private fun createNotificationChannel() {
         val name = "Grand Theft Radios"
         val descriptionText = "Listen to any GTA radio station!"
-        val importance = NotificationManager.IMPORTANCE_HIGH
+        val importance = NotificationManager.IMPORTANCE_LOW
         val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
             description = descriptionText
         }
@@ -47,11 +47,9 @@ class RadioPlayerNotificationHelper(private val context: Context) {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun updateNotificationAndShow(isPlaying: Boolean, radio: Radio?) {
         val notification = getNotification(isPlaying, radio)
-        RequestPermission.requestNotificationPermission(context) {
-            val notificationManager =
-                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.notify(NOTIFICATION_ID, notification)
-        }
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
     fun getNotification(isPlaying: Boolean, radio: Radio?): Notification {

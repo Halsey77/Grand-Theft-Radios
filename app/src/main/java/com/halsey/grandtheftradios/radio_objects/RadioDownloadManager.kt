@@ -3,7 +3,7 @@ package com.halsey.grandtheftradios.radio_objects
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Context.RECEIVER_NOT_EXPORTED
+import android.content.Context.RECEIVER_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
@@ -41,7 +41,7 @@ class RadioDownloadManager(private val context: Context) {
         context.registerReceiver(
             downloadCompleteReceiver,
             IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-            RECEIVER_NOT_EXPORTED
+            RECEIVER_EXPORTED
         )
 
     }

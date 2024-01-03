@@ -3,6 +3,7 @@ package com.halsey.grandtheftradios
 import android.app.DownloadManager
 import android.content.*
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -14,6 +15,7 @@ import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.CarouselSnapHelper
 import com.google.android.material.carousel.HeroCarouselStrategy
 import com.halsey.grandtheftradios.custom.CarouselAdapter
+import com.halsey.grandtheftradios.notification.RequestPermission
 import com.halsey.grandtheftradios.radio_objects.RadioDownloadManager
 import com.halsey.grandtheftradios.radio_objects.RadioPlayerService
 import com.halsey.grandtheftradios.radio_objects.RadiosMap
@@ -54,13 +56,25 @@ class MainActivity : AppCompatActivity() {
         radioDownloadManager = RadioDownloadManager(this)
 
         setupBroadcastReceiver()
-        startAndBindRadioPlayerService()
+//        startAndBindRadioPlayerService()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            RequestPermission.requestNotificationPermission(this) {
+                startAndBindRadioPlayerService()
+            }
+        } else {
+            startAndBindRadioPlayerService()
+        }
     }
 
     override fun onResume() {
         super.onResume()
 //        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver!!, filter!!)
-        registerReceiver(broadcastReceiver!!, filter!!, RECEIVER_EXPORTED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(broadcastReceiver!!, filter!!, RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(broadcastReceiver!!, filter!!)
+        }
     }
 
     private fun setupBroadcastReceiver() {

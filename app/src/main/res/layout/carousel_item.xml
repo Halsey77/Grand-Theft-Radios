@@ -17,6 +17,8 @@
             android:transitionName="image"
             android:layout_gravity="top"
             android:scaleType="centerCrop"
-            android:adjustViewBounds="true"/>
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/carousel_item"
+    />
 
 </com.google.android.material.carousel.MaskableFrameLayout>
