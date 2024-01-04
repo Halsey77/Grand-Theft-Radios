@@ -9,4 +9,6 @@
     <string name="button_play">Play</string>
     <string name="button_pause">Pause</string>
     <string name="carousel_item">carousel item</string>
+    <string name="left_arrow">left arrow</string>
+    <string name="right_arrow">right arrow</string>
 </resources>

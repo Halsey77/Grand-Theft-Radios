@@ -58,5 +58,31 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/downloadButton" android:layout_marginTop="32dp"/>
-
+    <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/stationsScrollView"
+            app:layout_constraintTop_toBottomOf="@+id/playButton"
+            android:layout_marginTop="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+    />
+    <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/prevStationButton"
+            android:src="@drawable/ic_arrow_left"
+            app:layout_constraintTop_toTopOf="@+id/stationsScrollView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/stationsScrollView"
+            android:contentDescription="@string/left_arrow"/>
+    <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/nextStationButton"
+            android:src="@drawable/ic_arrow_right"
+            app:layout_constraintTop_toTopOf="@+id/stationsScrollView"
+            app:layout_constraintStart_toEndOf="@+id/stationsScrollView"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:contentDescription="@string/right_arrow"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -52,11 +52,9 @@ class MainActivity : AppCompatActivity() {
         downloadButton = findViewById(R.id.downloadButton)
         progressBar = findViewById(R.id.progressBar)
         playButton = findViewById(R.id.playButton)
-
         radioDownloadManager = RadioDownloadManager(this)
 
         setupBroadcastReceiver()
-//        startAndBindRadioPlayerService()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             RequestPermission.requestNotificationPermission(this) {
@@ -286,6 +284,7 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+//TODO: Add stations icons
 //TODO: Update spinner to be more beautiful
-//TODO: Add a button to delete the station
 //TODO: Update the UI to be more beautiful
+//TODO: Pause when another media is playing
