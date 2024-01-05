@@ -7,4 +7,12 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="redscale_1">#FFEBEE</color>
+    <color name="grayscale_1">#E1E1E1</color>
+    <color name="colorWhite">#FFFFFF</color>
+    <color name="colorDarkGrey">#B3B3B3</color>
+    <color name="spinner_end_color">#B3BBCC</color>
+    <color name="spinner_start_color">#E8EBEF</color>
+    <color name="spinner_stroke_color">#000000</color>
+    <color name="action_bar_background">#EEA0FE</color>
 </resources>
