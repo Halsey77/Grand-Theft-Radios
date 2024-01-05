@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="redscale_1">#FFEBEE</color>
+    <color name="grayscale_1">#2E2E2E</color>
+    <color name="colorWhite">#FFFFFF</color>
+    <color name="colorDarkGrey">#B3B3B3</color>
+    <color name="spinner_end_color">#F0A4FF</color>
+    <color name="spinner_start_color">#DA52FF</color>
+    <color name="spinner_stroke_color">#000000</color>
+    <color name="action_bar_background">#EEA0FE</color>
+</resources>
