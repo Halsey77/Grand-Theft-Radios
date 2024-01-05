@@ -291,6 +291,4 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-//TODO: Update spinner to be more beautiful
-//TODO: Update the UI to be more beautiful
 //TODO: Pause when another media is playing

@@ -463,15 +463,6 @@ class RadiosMap private constructor() {
         gameToStationNamesMap[game] = names
     }
 
-    fun getRadioArrayOfGame(game: String): Array<Radio?> {
-        val radioNames = gameToStationNamesMap[game]
-        val radios = arrayOfNulls<Radio>(radioNames!!.size)
-        for (i in radioNames.indices) {
-            radios[i] = getRadio(game, radioNames[i]!!)
-        }
-        return radios
-    }
-
     fun getRadioNamesOfGame(game: String): Array<String?> {
         return gameToStationNamesMap[game]!!
     }
