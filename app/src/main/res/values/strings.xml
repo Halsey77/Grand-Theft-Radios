@@ -11,4 +11,6 @@
     <string name="carousel_item">carousel item</string>
     <string name="left_arrow">left arrow</string>
     <string name="right_arrow">right arrow</string>
+    <string name="radio_station_icon">radio station icon</string>
+    <string name="now_playing">Now Playing</string>
 </resources>
